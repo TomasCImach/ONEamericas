@@ -6,28 +6,30 @@ To develop a token on Celo to spend, save and stake and a stablecoin token pegge
 
 Volatile token
 
-*Milestone 1: Due 15/04/22*
+## Milestone 1: Due 15/04/22
 - Compliance with wallet standards based on ERC-20 
 - On deployement, transfer all supply to treasuryAddress. 
 - Add burning functionalities so the token can be burned when it is decided to do so - AccessControl with BURNER_ROLE
 - Add TAX mechanism and distribution to Pools
 
-*Milestone 2: Due 22/04/22*
+## Milestone 2: Due 22/04/22
 - Add mechanisms and standards that make gasless transactions possible for end-users like EIP-2612, EIP-2771 and other types of meta-transactions
 - Add multicall functionality to execute different token operations in one transaction, for example to transfer to more than one account in a same transaction, handy for distribution processes
 
-*Milestone 3: Due 29/04/22*
+## Milestone 3: Due 29/04/22
 - Make Upgradable
 
-+ Chain -         Celo
-+ Name -          ONEamericas
-+ Symbol -        ONEAM
-+ Max Supply -    100 BN - Done with _mint on constructor
-+ Decimals -      18
-+ Gas -           Own Currency
-+ TAX -           0,5% to Liquidity Pool = liquidityTax / baseTax 
-+                 0,5% to Staking Pool = stakingTax / baseTax 
-+ Whitelisted wallets - no TAX from/to
+### Properties
+- Chain -         Celo
+- Name -          ONEamericas
+- Symbol -        ONEAM
+- Max Supply -    100 BN - Done with _mint on constructor
+- Decimals -      18
+- Gas -           Own Currency
+- TAX -           
+  - 0,5% to Liquidity Pool = liquidityTax / baseTax 
+  - 0,5% to Staking Pool = stakingTax / baseTax 
+- Whitelisted wallets - no TAX from/to
 
 
 TODO:
