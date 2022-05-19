@@ -1,36 +1,108 @@
-# Volatile token for the ONEAM Project
+# Volatile token for the ONE Project
 
-To develop a token on Celo to spend, save and stake and a stablecoin token pegged to USD. 
-
-1. A volatile token for the  ecosystem with a genesis supply of 100BN that will be distributed transparently. In the future it can also be used to charge fees for certain operations or services that can be redistributed to maintain the ecosystem. 
+- A volatile token for the  ecosystem with a genesis supply of 100BN that will be distributed transparently. In the future it can also be used to charge fees for certain operations or services that can be redistributed to maintain the ecosystem. 
 
 Volatile token
 
-## Milestone 1: Due 15/04/22
-- Compliance with wallet standards based on ERC-20 
-- On deployement, transfer all supply to treasuryAddress. 
-- Add burning functionalities so the token can be burned when it is decided to do so - AccessControl with BURNER_ROLE
-- Add TAX mechanism and distribution to Pools
-
-## Milestone 2: Due 22/04/22
-- Add mechanisms and standards that make gasless transactions possible for end-users like EIP-2612, EIP-2771 and other types of meta-transactions
-- Add multicall functionality to execute different token operations in one transaction, for example to transfer to more than one account in a same transaction, handy for distribution processes
-
-## Milestone 3: Due 29/04/22
-- Make Upgradable
-
-### Properties
+## Properties
 - Chain -         Celo
-- Name -          ONEamericas
-- Symbol -        ONEAM
-- Max Supply -    100 BN - Done with _mint on constructor
+- Name -          ONEpinoy
+- Symbol -        PINOY
+- Max Supply -    625 BN - Done with _mint on constructor
 - Decimals -      18
 - Gas -           Own Currency
 - TAX -           
-  - 0,5% to Liquidity Pool = liquidityTax / baseTax 
+  - 0,5% to Team Pool = teamTax / baseTax 
   - 0,5% to Staking Pool = stakingTax / baseTax 
 - Whitelisted wallets - no TAX from/to
 
+## Deployement and Updating instructions
 
-TODO:
-Modified burn cappabilities - check with team
+For deployment and updating this Smart Contract we'll be using Upgrades Plugins from OpenZeppelin for Hardhat.
+
+In the proyect directory, after installig the project dependencies:
+
+```
+npm install --save-dev @openzeppelin/hardhat-upgrades
+npm install --save-dev @nomiclabs/hardhat-ethers ethers
+```
+
+**hardhat.config.js**
+
+Add the following lines on the top of the file and put the network details and your Private Key:
+```
+require("@nomiclabs/hardhat-ethers");
+require('@openzeppelin/hardhat-upgrades');
+```
+
+### Deploy first version
+
+In the proyect directory:
+```
+npx hardhat run --network celo scripts/deploy.js
+```
+In the console you'll read two Contracts Addresses, one for Minimal Forwarder and the other for the project Proxy.
+
+### Deploy Upgrade
+
+Make sure the file **scripts/deployUpgrade.js** has the correct name for the new version of the contract, and put the Minimal Forwarder address.
+In the proyect directory:
+```
+npx hardhat run --network celo scripts/deployUpgrade.js
+```
+In the console you'll read two Contracts Addresses, one for Proxy (same as before) and the other for the new implementation.
+
+## Admin Role functions
+
+- setTeamPoolAddress: Changes the address where teamTax is transferred.
+- setStakingPoolAddress: Changes the address where StakingTax is transferred.
+- setMetaFeeAddress: Changes the address where gasless fee transactions are transferred.
+- setTeamTax: Changes the teamTax. Tax = teamTax / baseTax.
+- setStakingTax: Changes the stakingTax. Tax = stakingTax / baseTax.
+- setBaseTax: Changes the base tax with which taxes are calculated.
+
+## Constructor data
+
+Change this before deployement
+- teamTax
+- stakingTax
+- baseTax
+- teamPoolAddress
+- stakingPoolAddress
+- metaFeeAddress
+- _mint(amount)
+
+# Stablecoins token for ONE Project
+
+- Stablecoin Token FIAT-collateralized for $USD and $PHP (Philippine Peso).
+
+## Properties
+- Chain -         Celo
+- Name -          **ASK TEAM**
+- Symbol -        **ASK TEAM**
+- Max Supply -    Variable
+- Decimals -      18
+- Gas -           Own Currency
+- Mint by role
+- Burn by role
+- Bulk transfer function
+- Blacklist
+- NON Upgradeable
+- NON Taxable
+
+Contract for Dollar
+Name-ONE US Dollar 
+Symbol-ONEUSD
+
+Contract for Peso
+Name-ONE Philippine Peso
+Symbol-ONEPHP
+
+-- Price $3000 for main Stablecoin contract --
+-- $500 for each instance (first is free) --
+
+In the case of $USD and $PHP - will be total $3500
+If in the future you want to deploy $ARS will be $500
+
+
+## Todo

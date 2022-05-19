@@ -10,23 +10,24 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/metatx/MinimalForwarder.sol";
 
-contract ONEamericas is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, ERC2771ContextUpgradeable, UUPSUpgradeable {
+contract ONEpinoy is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, ERC2771ContextUpgradeable, UUPSUpgradeable {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant WHITELISTED_ROLE = keccak256("WHITELISTED_ROLE");
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    address public liquidityPoolAddress;
+    address public teamPoolAddress;
     address public stakingPoolAddress;
     address public metaFeeAddress;
-    uint16 public liquidityTax;
+    uint16 public teamTax;
     uint16 public stakingTax;
     uint16 public baseTax;
 
     constructor(address trustedForwarder) ERC2771ContextUpgradeable(trustedForwarder) {}
 
     function initialize() initializer public {
-        __ERC20_init("ONEamericas", "ONEAM");
+        __ERC20_init("ONEpinoy", "PINOY");
         __ERC20Burnable_init();
         __Pausable_init();
         __AccessControl_init();
@@ -36,19 +37,20 @@ contract ONEamericas is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
         _grantRole(ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(WHITELISTED_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
 
-        liquidityTax = 5; // 0,5%
+        teamTax = 5; // 0,5%
         stakingTax = 5; // 0,5%
         baseTax = 1000;
 
-        liquidityPoolAddress = 0x000000000000000000000000000000000000dEaD;  // test address
-        _grantRole(WHITELISTED_ROLE, liquidityPoolAddress);
+        teamPoolAddress = 0x000000000000000000000000000000000000dEaD;  // test address
+        _grantRole(WHITELISTED_ROLE, teamPoolAddress);
         stakingPoolAddress = 0x2222222222222222222222222222222222222222; // test address
         _grantRole(WHITELISTED_ROLE, stakingPoolAddress);
         metaFeeAddress = 0x1111111111111111111111111111111111111111; // test address
         _grantRole(WHITELISTED_ROLE, metaFeeAddress);
 
-        _mint(msg.sender, (100 * 10**9) * 10**18); // Mint Total Supply of 100 Billion $ONEAM to contract deployer
+        _mint(msg.sender, (625 * 10**9) * 10**18); // Mint Total Supply of 625 Billion $PINOY to contract deployer
         _grantRole(UPGRADER_ROLE, msg.sender);
     }
 
@@ -58,6 +60,10 @@ contract ONEamericas is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
 
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
+    }
+
+    function mint(address _to, uint256 _amount) public onlyRole(MINTER_ROLE) {
+        _mint(_to, _amount);
     }
 
     function bulkTransfer(address[] memory to, uint256[] memory amount) external returns (bool) {
@@ -79,10 +85,10 @@ contract ONEamericas is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     function _transfer(address from, address to, uint256 amount) internal override {
         uint256 totalAmount = amount;
         if (!hasRole(WHITELISTED_ROLE, from) && !hasRole(WHITELISTED_ROLE, to)) {
-            if (liquidityTax > 0) {
-                uint256 liquidityAmount = totalAmount * liquidityTax / baseTax;
-                super._transfer(from, liquidityPoolAddress, liquidityAmount);
-                amount = amount - liquidityAmount;
+            if (teamTax > 0) {
+                uint256 teamAmount = totalAmount * teamTax / baseTax;
+                super._transfer(from, teamPoolAddress, teamAmount);
+                amount = amount - teamAmount;
             }
             if (stakingTax > 0) {
                 uint256 stakingAmount = totalAmount * stakingTax / baseTax;
@@ -101,8 +107,8 @@ contract ONEamericas is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     }
 
     /*      ADMIN_ROLE functions        */
-    function setLiquidityPoolAddress(address newLiquidityPoolAddress) public onlyRole(ADMIN_ROLE) {
-        liquidityPoolAddress = newLiquidityPoolAddress;
+    function setTeamPoolAddress(address newTeamPoolAddress) public onlyRole(ADMIN_ROLE) {
+        teamPoolAddress = newTeamPoolAddress;
     }
     function setStakingPoolAddress(address newStakingPoolAddress) public onlyRole(ADMIN_ROLE) {
         stakingPoolAddress = newStakingPoolAddress;
@@ -110,8 +116,8 @@ contract ONEamericas is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     function setMetaFeeAddress(address newMetaFeeAddress) public onlyRole(ADMIN_ROLE) {
         metaFeeAddress = newMetaFeeAddress;
     }
-    function setLiquidityTax(uint16 newLiquidityTax) public onlyRole(ADMIN_ROLE) {
-        liquidityTax = newLiquidityTax;
+    function setTeamTax(uint16 newTeamTax) public onlyRole(ADMIN_ROLE) {
+        teamTax = newTeamTax;
     }
     function setStakingTax(uint16 newStakingTax) public onlyRole(ADMIN_ROLE) {
         stakingTax = newStakingTax;

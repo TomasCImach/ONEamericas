@@ -1,6 +1,7 @@
 // Load dependencies
 const { expect } = require('chai');
 const { Wallet, BigNumber, utils } = require('ethers');
+const { signMetaTxRequest } = require("../src/signer");
  
 // Start test block
 describe('ONEamericas (proxy)', function () {
@@ -59,8 +60,69 @@ describe('ONEamericas (proxy)', function () {
 
         await token.connect(addr1).burn(utils.parseEther("10"));
         expect(await token.balanceOf(addr1.address)).to.equal(utils.parseEther("70"));
-        expect(() => token.connect(addr1).burnFrom(owner.address, utils.parseEther("100"))).to.throw('ERC20: insufficient allowance');
+        // expect(() => token.connect(addr1).burnFrom(owner.address, utils.parseEther("100"))).to.throw('ERC20: insufficient allowance');
     });
 
+    it("metaTransfer via a meta-tx", async function() {
+        await token.transfer(addr1.address, utils.parseEther("10"));
+        expect(await token.balanceOf(addr1.address)).to.equal(utils.parseEther("10"));
+        const signer = addr1;
+        const relayer = addr2;
+        const forwarderR = forwarder.connect(relayer);
+    
+        const { request, signature } = await signMetaTxRequest(signer.provider, forwarderR, {
+          from: signer.address,
+          to: token.address,
+          data: token.interface.encodeFunctionData('metaTransfer', [addr2.address, utils.parseEther("9"), utils.parseEther("1")]),
+        });
+        
+        await forwarderR.execute(request, signature).then(tx => tx.wait());
+    
+        expect(await token.balanceOf(addr1.address)).to.equal(utils.parseEther("0"));
+        expect(await token.balanceOf("0x1111111111111111111111111111111111111111")).to.equal(utils.parseEther("1"));
+        expect(await token.balanceOf(addr2.address)).to.equal(utils.parseEther("8.91"));
+        expect(await token.balanceOf("0x000000000000000000000000000000000000dEaD")).to.equal(utils.parseEther("0.045"));
+        expect(await token.balanceOf("0x2222222222222222222222222222222222222222")).to.equal(utils.parseEther("0.045"));
 
+    });
+
+    it("upgrade contract and mint", async function() {
+        await token.transfer(addr1.address, utils.parseEther("10"));
+        let tokenV2ContractFactory = await ethers.getContractFactory("ONEamericasV2");
+        let tokenV2 = await upgrades.upgradeProxy(token.address, tokenV2ContractFactory, {constructorArgs: [forwarder.address], unsafeAllow: ["constructor"]});
+
+        expect(await tokenV2.balanceOf(addr1.address)).to.equal(utils.parseEther("10"));
+
+        await tokenV2.mint(addr1.address, utils.parseEther("10"));
+
+        expect(await tokenV2.balanceOf(addr1.address)).to.equal(utils.parseEther("20"));
+    });
+
+    it("upgrade contract and metaTransfer", async function() {
+        await token.transfer(addr1.address, utils.parseEther("10"));
+        let tokenV2ContractFactory = await ethers.getContractFactory("ONEamericasV2");
+        let tokenV2 = await upgrades.upgradeProxy(token.address, tokenV2ContractFactory, {constructorArgs: [forwarder.address], unsafeAllow: ["constructor"]});
+
+        expect(await tokenV2.balanceOf(addr1.address)).to.equal(utils.parseEther("10"));
+
+        const signer = addr1;
+        const relayer = addr2;
+        const forwarderR = forwarder.connect(relayer);
+
+        //console.log("contracts", token.address, tokenV2.address);
+    
+        const { request, signature } = await signMetaTxRequest(signer.provider, forwarderR, {
+          from: signer.address,
+          to: tokenV2.address,
+          data: tokenV2.interface.encodeFunctionData('metaTransfer', [addr2.address, utils.parseEther("9"), utils.parseEther("1")]),
+        });
+        
+        await forwarderR.execute(request, signature).then(tx => tx.wait());
+    
+        expect(await tokenV2.balanceOf(addr1.address)).to.equal(utils.parseEther("0"));
+        expect(await tokenV2.balanceOf("0x1111111111111111111111111111111111111111")).to.equal(utils.parseEther("1"));
+        expect(await tokenV2.balanceOf(addr2.address)).to.equal(utils.parseEther("8.91"));
+        expect(await tokenV2.balanceOf("0x000000000000000000000000000000000000dEaD")).to.equal(utils.parseEther("0.045"));
+        expect(await tokenV2.balanceOf("0x2222222222222222222222222222222222222222")).to.equal(utils.parseEther("0.045"));
+    });
 });
